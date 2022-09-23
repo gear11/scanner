@@ -8,8 +8,6 @@ class Counter extends ConsumerWidget {
 
   @override
   Widget build(context, ref) {
-    print("Building counter!");
-
     final counter = ref.watch(counterProvider);
     final notifier = ValueNotifier<String>("--");
 
