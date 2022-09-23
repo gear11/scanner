@@ -19,7 +19,13 @@ class WatchList extends ConsumerWidget {
             });
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => Center(child: Text(e.toString())),
+      error: (e, st) {
+        if (e.toString().contains('Connection refused')) {
+          return const Center(
+              child: Text('Unable to connect to the server. Retrying.'));
+        }
+        return Center(child: Text(e.toString()));
+      },
     );
   }
 }

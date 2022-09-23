@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../settings/settings_view.dart';
 import '../widgets/watch_list.dart';
 import '../widgets/counter.dart';
+import '../widgets/connection_status.dart';
 
 /// Displays a list of SampleItems.
 class WatchListView extends StatelessWidget {
@@ -41,7 +42,8 @@ class WatchListView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: const [
                   Expanded(flex: 1, child: WatchList()),
-                  Expanded(flex: 1, child: Counter())
+                  //Expanded(flex: 1, child: Counter()),
+                  //Expanded(flex: 1, child: ConnectionStatus()),
                 ])));
   }
 }
