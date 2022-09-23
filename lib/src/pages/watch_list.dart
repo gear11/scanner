@@ -36,7 +36,7 @@ class WatchListView extends StatelessWidget {
         // builds Widgets as they’re scrolled into view.
         //body: Center(child: Row(children: const [WatchList(), Counter()])));
         body: Padding(
-            padding: EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(8.0),
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: const [
