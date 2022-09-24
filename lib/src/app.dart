@@ -86,7 +86,7 @@ class MyApp extends StatelessWidget {
                 //return const WatchList();
                 //return const Counter();
                 //return Center(child: GqlCounter());
-                return WatchListView();
+                return const WatchListView();
                 //   Column(children: [GqlCounter(), const WatchList()]);
                 /*
                 switch (routeSettings.name) {

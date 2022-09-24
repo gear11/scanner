@@ -16,12 +16,11 @@ final _counterSubscriptionDoc = gql(
 
 final counterProvider = StreamProvider.autoDispose<int>((ref) {
   final client = ref.watch(clientProvider);
-  final subscription = client.subscribe(
-    SubscriptionOptions(document: _counterSubscriptionDoc),
-  );
+  final subscription = client.get().subscribe(
+        SubscriptionOptions(document: _counterSubscriptionDoc),
+      );
   return subscription.map((QueryResult<Object?> result) {
     if (result.hasException) {
-      print('Throwing');
       throw result.exception!;
     }
     return result.data?['counter']?['count'];

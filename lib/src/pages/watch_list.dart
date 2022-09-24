@@ -43,7 +43,7 @@ class WatchListView extends StatelessWidget {
                 children: const [
                   Expanded(flex: 1, child: WatchList()),
                   //Expanded(flex: 1, child: Counter()),
-                  //Expanded(flex: 1, child: ConnectionStatus()),
+                  Expanded(flex: 1, child: ConnectionStatusWidget()),
                 ])));
   }
 }
