@@ -7,7 +7,7 @@ import '../providers/client.dart';
 import 'util.dart';
 import '../providers/logging.dart';
 
-final log = logger(WatchList);
+final log = logger(WatchList).noop();
 
 class WatchList extends ConsumerWidget {
   const WatchList({Key? key}) : super(key: key);

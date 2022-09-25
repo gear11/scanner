@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:gql/ast.dart';
 import '../models/watch_list.dart';
 import '../providers/connection.dart';
 
@@ -87,7 +86,7 @@ class WatchListService {
     return _mutate(_removeSymbolDoc, symbol);
   }
 
-  Future<WatchList> _mutate(DocumentNode mutateDoc, String symbol) async {
+  Future<WatchList> _mutate(mutateDoc, String symbol) async {
     final MutationOptions options = MutationOptions(
       document: mutateDoc,
       variables: <String, dynamic>{

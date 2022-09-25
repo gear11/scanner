@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:async' show StreamController;
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'connection.dart';
 import '../models/watch_list.dart';
@@ -65,7 +64,7 @@ class WiredWatchListService {
   }
 
   void _onError(dynamic e, String msg) {
-    log.severe('Error on action $msg: $e');
+    log.warning('Error on action $msg: $e');
     connEvents.add(ConnectionEvent(e, isError: true));
   }
 }
@@ -76,9 +75,6 @@ final watchListServiceProvider = Provider<WiredWatchListService>((ref) {
   final service = WiredWatchListService(client, connEvents);
   return service;
 });
-
-//final watchListEvents = Provider<StreamController<WatchList>>(
-//    (ref) => StreamController<WatchList>());
 
 final watchListUpdateProvider =
     StreamProvider.autoDispose<WatchList>((ref) async* {
