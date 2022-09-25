@@ -8,6 +8,7 @@ void initLogging() {
   if (!_isLoggingInit) {
     hierarchicalLoggingEnabled = true;
     Logger.root.level = Level.ALL; // defaults to Level.INFO
+    // ignore: avoid_print
     Logger.root.onRecord.listen((record) => print(format(record)));
     _isLoggingInit = true;
     Logger('null').level = Level.OFF;
@@ -74,4 +75,10 @@ String getCaller(StackTrace current) {
 Logger nullLogger(dynamic context) {
   // Ignore the context and provide our disabled logger
   return Logger('null');
+}
+
+extension NoopLogger on Logger {
+  Logger noop() {
+    return Logger('null');
+  }
 }
