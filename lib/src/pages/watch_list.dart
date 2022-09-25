@@ -42,7 +42,7 @@ class WatchListView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: const [
                   Expanded(flex: 1, child: WatchList()),
-                  //Expanded(flex: 1, child: Counter()),
+                  Expanded(flex: 1, child: Counter()),
                   Expanded(flex: 1, child: ConnectionStatusWidget()),
                 ])));
   }

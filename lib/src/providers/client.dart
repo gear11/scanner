@@ -1,29 +1,11 @@
 import 'dart:async';
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'connection.dart';
 
-class ConnectionEvent {
-  ConnectionEvent(this.detail, {this.isError = false});
-
-  final Object detail;
-  final bool isError;
-}
-
-class ConnectionOkay extends StateNotifier<bool> {
-  ConnectionOkay() : super(false);
-
-  bool isConnectionOkay() {
-    return state;
-  }
-
-  void setConnectionOkay(bool isOkay) {
-    state = isOkay;
-  }
-}
-
-final connectionOkayProvider =
-    StateNotifierProvider<ConnectionOkay, bool>((ref) => ConnectionOkay());
+final connectionStatusProvider =
+    StateNotifierProvider<ConnectionNotifier, ConnectionStatus>(
+        (ref) => ConnectionNotifier());
 
 final websocketLinkProvider =
     Provider((ref) => MyWebSocketLink("ws://127.0.0.1:5000"));
@@ -31,49 +13,20 @@ final websocketLinkProvider =
 final connectionEventProvider = StreamProvider((ref) {
   final controller = ref.watch(websocketLinkProvider).events;
   return controller.stream.map((event) {
-    ref.read(connectionOkayProvider.notifier).setConnectionOkay(!event.isError);
+    ref.read(connectionStatusProvider.notifier).notify(event);
     return event;
   });
 });
 
-/*
-final connectionEventChannelProvider =
-    Provider<StreamController<ConnectionEvent>>((ref) {
-  return ref.watch(websocketLinkProvider).events;
-});
-*/
-
-class ClientWrapper {
-  ClientWrapper(this.ref);
-  final ProviderRef<ClientWrapper> ref;
-  GraphQLClient? _client;
-
-  GraphQLClient get() {
-    if (_client == null) {
-      final httpLink = HttpLink("http://127.0.0.1:5000");
-      final websocketLink = ref.watch(websocketLinkProvider);
-      final link = Link.split(
-          (request) => request.isSubscription, websocketLink, httpLink);
-      _client = GraphQLClient(
-          cache: GraphQLCache(store: InMemoryStore()), link: link);
-    }
-    return _client!;
-  }
-
-  void reset() {
-    _client = null;
-  }
-}
-
-final clientProvider = Provider((ref) {
-  return ClientWrapper(ref);
-  /*
-  final httpLink = HttpLink("http://127.0.0.1:5000");
-  final websocketLink = ref.read(websocketLinkProvider);
-  final link =
-      Link.split((request) => request.isSubscription, websocketLink, httpLink);
-  return GraphQLClient(cache: GraphQLCache(store: InMemoryStore()), link: link);
-*/
+final clientProvider = Provider<ConnectionWrapper<GraphQLClient>>((ref) {
+  return ConnectionWrapper<GraphQLClient>(() {
+    final httpLink = HttpLink("http://127.0.0.1:5000");
+    final websocketLink = ref.watch(websocketLinkProvider);
+    final link = Link.split(
+        (request) => request.isSubscription, websocketLink, httpLink);
+    return GraphQLClient(
+        cache: GraphQLCache(store: InMemoryStore()), link: link);
+  });
 });
 
 // This is copy-pasta from GraphQL client, but I need the Socket Client
@@ -109,7 +62,7 @@ class MyWebSocketLink extends Link {
   }
 
   void onMessage(GraphQLSocketMessage msg) {
-    events.add(ConnectionEvent(msg.type));
+    events.add(ConnectionEvent('Received message of type "${msg.type}"'));
   }
 
   /// Disposes the underlying socket client explicitly. Only use this, if you want to disconnect from

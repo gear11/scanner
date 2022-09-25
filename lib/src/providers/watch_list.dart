@@ -1,62 +1,88 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async' show StreamController;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'dart:async';
-import 'client.dart';
+import 'connection.dart';
 import '../models/watch_list.dart';
-import '../providers/logging.dart';
+import '../services/watch_list.dart';
+import 'client.dart';
+import 'logging.dart';
+
+final connEvents = StreamController<ConnectionEvent>();
 
 final log = logger(currentFile);
 
-final _watchListDoc = gql(r'''
-    query getWatchList {
-      getWatchList {
-        success
-        errors
-        items {
-          symbol
-          date
-          open
-          high
-          low
-          close
-          wap
-          volume
+class WiredWatchListService {
+  WiredWatchListService(
+      ConnectionWrapper<GraphQLClient> client, this.connEvents)
+      : service = WatchListService(client);
+
+  final WatchListService service;
+  final watchlistEvents = StreamController<WatchList>();
+  final StreamController<ConnectionEvent> connEvents;
+  bool _loopStarted = false;
+
+  Future<void> startRefreshLoop() async {
+    if (_loopStarted) {
+      log.warning('Loop already started');
+    }
+    _loopStarted = true;
+    log.warning('Starting watch list loop');
+    try {
+      while (true) {
+        const action = 'Refresh watchlist';
+        try {
+          final watchlist = await service.fetch();
+          _onWatchList(watchlist, action);
+        } catch (ex) {
+          _onError(ex, action);
+        } finally {
+          await Future.delayed(const Duration(seconds: 5));
         }
       }
+    } finally {
+      log.severe('Exiting watch list update loop!');
     }
-    ''');
+  }
 
-final watchListProvider =
-    StreamProvider.autoDispose<List<WatchListItem>>((ref) async* {
+  Future<void> remove(String symbol) async {
+    final action = 'Update from remove $symbol';
+    service.remove(symbol).then((w) => _onWatchList(w, action),
+        onError: (e) => _onError(e, action));
+  }
+
+  Future<WatchList> fetch() async {
+    const action = 'Fetching watchlist';
+    return service.fetch().then((w) {
+      _onWatchList(w, action);
+      return w;
+    }, onError: (e) => _onError(e, action));
+  }
+
+  void _onWatchList(WatchList watchlist, String msg) {
+    watchlistEvents.add(watchlist);
+    connEvents.add(ConnectionEvent(msg));
+  }
+
+  void _onError(dynamic e, String msg) {
+    log.severe('Error on action $msg: $e');
+    connEvents.add(ConnectionEvent(e, isError: true));
+  }
+}
+
+final watchListServiceProvider = Provider<WiredWatchListService>((ref) {
   final client = ref.watch(clientProvider);
   final connEvents = ref.watch(websocketLinkProvider).events;
-  final options = QueryOptions(
-    document: _watchListDoc,
-    fetchPolicy: FetchPolicy.noCache,
-  );
+  final service = WiredWatchListService(client, connEvents);
+  return service;
+});
 
-  log.warning('Restarting watch list loop');
-  try {
-    while (true) {
-      final QueryResult result = await client.get().query(options);
-      if (result.hasException) {
-        log.warning('WatchList query error');
-        connEvents.add(ConnectionEvent(result.exception!, isError: true));
-        //await Future.delayed(const Duration(seconds: 3),
-        //    () => ref.refresh(clientProvider)); // Retry
-        //throw result.exception!;
-        client.reset();
-      } else {
-        log.info('WatchList query success');
-        connEvents.add(ConnectionEvent('Received watch list response'));
-        final List<dynamic> items = result.data!['getWatchList']['items'];
-        yield items
-            .map((item) => WatchListItem.fromMap(item))
-            .toList(growable: false);
-      }
-      await Future.delayed(const Duration(seconds: 5));
-    }
-  } finally {
-    log.warning('Exiting watch list loop!');
-  }
+//final watchListEvents = Provider<StreamController<WatchList>>(
+//    (ref) => StreamController<WatchList>());
+
+final watchListUpdateProvider =
+    StreamProvider.autoDispose<WatchList>((ref) async* {
+  final watchlistService = ref.read(watchListServiceProvider);
+  watchlistService.startRefreshLoop();
+  yield* watchlistService.watchlistEvents.stream;
 });

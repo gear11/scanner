@@ -6,9 +6,11 @@ const currentFile = StackTrace;
 
 void initLogging() {
   if (!_isLoggingInit) {
+    hierarchicalLoggingEnabled = true;
     Logger.root.level = Level.ALL; // defaults to Level.INFO
     Logger.root.onRecord.listen((record) => print(format(record)));
     _isLoggingInit = true;
+    Logger('null').level = Level.OFF;
   }
 }
 
@@ -67,4 +69,9 @@ String getCaller(StackTrace current) {
   RegExpMatch? match = exp.allMatches(current.toString()).elementAt(1);
   final paths = match[1]!.split('/');
   return paths.getRange(paths.length - 2, paths.length).join('/');
+}
+
+Logger nullLogger(dynamic context) {
+  // Ignore the context and provide our disabled logger
+  return Logger('null');
 }

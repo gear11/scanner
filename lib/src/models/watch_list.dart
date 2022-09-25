@@ -15,3 +15,8 @@ class WatchListItem {
         item['low'], item['close'], item['wap'], item['volume']);
   }
 }
+
+class WatchList {
+  WatchList(this.items);
+  final List<WatchListItem> items;
+}
