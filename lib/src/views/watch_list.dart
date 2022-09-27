@@ -33,8 +33,7 @@ class _WatchListViewState extends ConsumerState<WatchListView> {
                   onPressed: () {
                     showSearch(
                       context: context,
-                      delegate:
-                          SymbolSearchDelegate(ref, () => {setState(() => {})}),
+                      delegate: SymbolSearchDelegate(),
                     );
                   },
                 ))

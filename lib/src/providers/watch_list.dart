@@ -84,7 +84,7 @@ final symbolSearchResultsProvider =
     FutureProvider.family<List<SymbolInfo>, String>((ref, query) async {
   final svc = ref.watch(watchListServiceProvider);
   final symbols = await svc.searchSymbols(query);
-  _log.info(symbols.toString());
+  _log.info('Got results: $symbols');
   return symbols;
 });
 

@@ -8,15 +8,12 @@ import 'util.dart';
 final _log = logger(currentFile);
 
 class SymbolSearchDelegate extends SearchDelegate {
-  SymbolSearchDelegate(this.ref, this.redraw)
+  SymbolSearchDelegate()
       : super(
           searchFieldLabel: 'Enter a symbol',
           keyboardType: TextInputType.text,
           textInputAction: TextInputAction.search,
         );
-
-  final WidgetRef ref;
-  final Function redraw;
 
   @override
   Widget buildLeading(BuildContext context) => IconButton(
@@ -28,10 +25,35 @@ class SymbolSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildSuggestions(BuildContext context) {
+    _log.info('Building suggestions');
     if (query.length < 2) {
       return Container();
     }
-    return ref.watch(symbolSearchResultsProvider(query)).when(
+    return SearchResultsWidget(this);
+  }
+
+  @override
+  Widget buildResults(BuildContext context) {
+    return SearchResultsWidget(this);
+  }
+
+  @override
+  List<Widget> buildActions(BuildContext context) => <Widget>[];
+}
+
+class SearchResultsWidget extends ConsumerWidget {
+  const SearchResultsWidget(this.delegate, {super.key});
+
+  final SearchDelegate delegate;
+
+  @override
+  Widget build(BuildContext context, ref) {
+    final query = delegate.query;
+    if (query.length < 2) {
+      return Container();
+    }
+    final val = ref.watch(symbolSearchResultsProvider(query));
+    return val.when(
         data: (symbols) {
           _log.info('Finally rendering search results');
           return SymbolInfoList(symbols);
@@ -41,31 +63,6 @@ class SymbolSearchDelegate extends SearchDelegate {
           return ErrorWidget([e, st]);
         });
   }
-
-  @override
-  Widget buildResults(BuildContext context) {
-    if (query.length < 3) {
-      return Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Center(
-            child: Text(
-              "Search term must be longer than two letters.",
-            ),
-          )
-        ],
-      );
-    }
-    return ref.watch(symbolSearchResultsProvider(query)).when(
-        data: (symbols) => SymbolInfoList(symbols),
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) {
-          return Center(child: Text(e.toString()));
-        });
-  }
-
-  @override
-  List<Widget> buildActions(BuildContext context) => <Widget>[];
 }
 
 class SymbolInfoList extends StatelessWidget {
