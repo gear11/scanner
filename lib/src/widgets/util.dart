@@ -3,6 +3,24 @@ import '../providers/logging.dart';
 
 final log = nullLogger(currentFile);
 
+class SymbolListTile extends StatelessWidget {
+  const SymbolListTile(this.symbol, {this.subtitle, this.trailing, super.key});
+
+  final String symbol;
+  final String? subtitle;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      leading: ColoredCircleAvatar(symbol),
+      title: Text(symbol),
+      subtitle: subtitle != null ? Text(subtitle!) : null,
+      trailing: trailing,
+    );
+  }
+}
+
 class ColoredCircleAvatar extends StatelessWidget {
   const ColoredCircleAvatar(this.text, {Key? key, this.fromColors = const []})
       : super(key: key);

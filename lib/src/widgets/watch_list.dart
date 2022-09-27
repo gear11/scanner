@@ -30,10 +30,9 @@ class WatchList extends ConsumerWidget {
                 itemCount: watchlist.items.length,
                 itemBuilder: (context, index) {
                   final WatchListItem item = watchlist.items[index];
-                  return ListTile(
-                    leading: ColoredCircleAvatar(item.symbol),
-                    title: Text(item.symbol),
-                    subtitle: Text(item.wap.toString()),
+                  return SymbolListTile(
+                    item.symbol,
+                    subtitle: item.wap.toString(),
                     trailing: IconButton(
                       icon: const Icon(Icons.remove),
                       tooltip: 'Remove ${item.symbol}',

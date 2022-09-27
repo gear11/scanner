@@ -9,7 +9,7 @@ import 'logging.dart';
 
 final connEvents = StreamController<ConnectionEvent>();
 
-final log = logger(currentFile);
+final _log = logger(currentFile);
 
 class WiredWatchListService {
   WiredWatchListService(
@@ -23,10 +23,10 @@ class WiredWatchListService {
 
   Future<void> startRefreshLoop() async {
     if (_loopStarted) {
-      log.warning('Loop already started');
+      _log.warning('Loop already started');
     }
     _loopStarted = true;
-    log.warning('Starting watch list loop');
+    _log.warning('Starting watch list loop');
     try {
       while (true) {
         const action = 'Refresh watchlist';
@@ -40,7 +40,7 @@ class WiredWatchListService {
         }
       }
     } finally {
-      log.severe('Exiting watch list update loop!');
+      _log.severe('Exiting watch list update loop!');
     }
   }
 
@@ -58,16 +58,35 @@ class WiredWatchListService {
     }, onError: (e) => _onError(e, action));
   }
 
+  Future<List<SymbolInfo>> searchSymbols(String query) {
+    const action = 'Search symbols';
+    return service.searchSymbols(query).then((data) {
+      connEvents.add(ConnectionEvent(action));
+      return data;
+    }, onError: (e) {
+      _onError(e, action);
+      throw e;
+    });
+  }
+
   void _onWatchList(WatchList watchlist, String msg) {
     watchlistEvents.add(watchlist);
     connEvents.add(ConnectionEvent(msg));
   }
 
   void _onError(dynamic e, String msg) {
-    log.warning('Error on action $msg: $e');
+    _log.warning('Error on action $msg: $e', e);
     connEvents.add(ConnectionEvent(e, isError: true));
   }
 }
+
+final symbolSearchResultsProvider =
+    FutureProvider.family<List<SymbolInfo>, String>((ref, query) async {
+  final svc = ref.watch(watchListServiceProvider);
+  final symbols = await svc.searchSymbols(query);
+  _log.info(symbols.toString());
+  return symbols;
+});
 
 final watchListServiceProvider = Provider<WiredWatchListService>((ref) {
   final client = ref.watch(clientProvider);
