@@ -106,22 +106,44 @@ class SymbolInfoList extends ConsumerWidget {
     ref.watch(watchListUpdateProvider);
     return ListView.builder(
         itemCount: symbols.length,
-        itemBuilder: (context, index) => SymbolListTile(
-              symbols[index].symbol,
-              enabled: !watchListService.current.has(symbols[index].symbol),
-              subtitle: symbols[index].companyName,
-              trailing: IconButton(
+        itemBuilder: (context, index) {
+          final symbol = symbols[index].symbol;
+          final inWatchlist = watchListService.current.has(symbol);
+          final addOrRemove = inWatchlist
+              ? IconButton(
+                  icon: const Icon(Icons.remove),
+                  tooltip: 'Remove $symbol',
+                  onPressed: _removeCB(context, watchListService, symbol))
+              : IconButton(
                   icon: const Icon(Icons.add),
-                  tooltip: 'Add ${symbols[index].symbol}',
-                  onPressed: () {
-                    //watchListService.current.addEmpty(symbols[index].symbol);
-                    watchListService.add(symbols[index].symbol);
-                    final action =
-                        'Added ${symbols[index].symbol} to watchlist';
-                    _log.info(action);
-                    ScaffoldMessenger.of(context)
-                        .showSnackBar(SnackBar(content: Text(action)));
-                  }),
-            ));
+                  tooltip: 'Add $symbol',
+                  onPressed: _addCB(context, watchListService, symbol));
+
+          return SymbolListTile(
+            symbol,
+            subtitle: symbols[index].companyName,
+            trailing: addOrRemove,
+          );
+        });
+  }
+
+  _addCB(context, WiredWatchListService service, symbol) {
+    return () {
+      service.add(symbol);
+      final action = 'Added $symbol to watchlist';
+      _log.info(action);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(action)));
+    };
+  }
+
+  _removeCB(context, WiredWatchListService service, symbol) {
+    return () {
+      service.remove(symbol);
+      final action = 'Removed $symbol from watchlist';
+      _log.info(action);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(action)));
+    };
   }
 }
