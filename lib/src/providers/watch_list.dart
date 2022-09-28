@@ -50,6 +50,12 @@ class WiredWatchListService {
         onError: (e) => _onError(e, action));
   }
 
+  Future<void> add(String symbol) async {
+    final action = 'Update from add $symbol';
+    service.add(symbol).then((w) => _onWatchList(w, action),
+        onError: (e) => _onError(e, action));
+  }
+
   Future<WatchList> fetch() async {
     const action = 'Fetching watchlist';
     return service.fetch().then((w) {
@@ -80,11 +86,14 @@ class WiredWatchListService {
   }
 }
 
-final symbolSearchResultsProvider =
-    FutureProvider.family<List<SymbolInfo>, String>((ref, query) async {
+final symbolSearchResultsProvider = FutureProvider.autoDispose
+    .family<List<SymbolInfo>, String>((ref, query) async {
   final svc = ref.watch(watchListServiceProvider);
   final symbols = await svc.searchSymbols(query);
-  _log.info('Got results: $symbols');
+  _log.info(() {
+    final s = symbols.map((s) => s.symbol);
+    return 'Got results: $s';
+  });
   return symbols;
 });
 

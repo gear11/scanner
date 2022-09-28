@@ -8,12 +8,15 @@ import 'util.dart';
 final _log = logger(currentFile);
 
 class SymbolSearchDelegate extends SearchDelegate {
-  SymbolSearchDelegate()
+  SymbolSearchDelegate(this.ref)
       : super(
-          searchFieldLabel: 'Enter a symbol',
+          searchFieldLabel: 'Company name or symbol',
           keyboardType: TextInputType.text,
           textInputAction: TextInputAction.search,
         );
+
+  final WidgetRef ref;
+  final List<SymbolInfo> results = [];
 
   @override
   Widget buildLeading(BuildContext context) => IconButton(
@@ -25,7 +28,7 @@ class SymbolSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    _log.info('Building suggestions');
+    _log.fine('Building suggestions');
     if (query.length < 2) {
       return Container();
     }
@@ -34,17 +37,33 @@ class SymbolSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
+    if (results.length == 1) {
+      _log.warning("Adding watchlist symbol ${results[0]}");
+      ref
+          .read(watchListServiceProvider)
+          .add(results[0].symbol)
+          .then(Navigator.of(context).pop);
+      return Container();
+    }
+    // Otherwise, 0 or multiple results, no change
     return SearchResultsWidget(this);
   }
 
   @override
-  List<Widget> buildActions(BuildContext context) => <Widget>[];
+  List<Widget> buildActions(BuildContext context) => [
+        IconButton(
+          icon: const Icon(Icons.clear),
+          onPressed: () {
+            query = '';
+          },
+        )
+      ];
 }
 
 class SearchResultsWidget extends ConsumerWidget {
   const SearchResultsWidget(this.delegate, {super.key});
 
-  final SearchDelegate delegate;
+  final SymbolSearchDelegate delegate;
 
   @override
   Widget build(BuildContext context, ref) {
@@ -55,7 +74,8 @@ class SearchResultsWidget extends ConsumerWidget {
     final val = ref.watch(symbolSearchResultsProvider(query));
     return val.when(
         data: (symbols) {
-          _log.info('Finally rendering search results');
+          delegate.results.clear();
+          delegate.results.addAll(symbols);
           return SymbolInfoList(symbols);
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -65,13 +85,13 @@ class SearchResultsWidget extends ConsumerWidget {
   }
 }
 
-class SymbolInfoList extends StatelessWidget {
+class SymbolInfoList extends ConsumerWidget {
   const SymbolInfoList(this.symbols, {super.key});
 
   final List<SymbolInfo> symbols;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, ref) {
     return ListView.builder(
         itemCount: symbols.length,
         itemBuilder: (context, index) => SymbolListTile(
@@ -80,8 +100,12 @@ class SymbolInfoList extends StatelessWidget {
               trailing: IconButton(
                   icon: const Icon(Icons.add),
                   tooltip: 'Add ${symbols[index].symbol}',
-                  onPressed: () {} // => onRemove(ref, item.symbol),
-                  ),
+                  onPressed: () {
+                    _log.info('Adding ${symbols[index].symbol}');
+                    ref
+                        .read(watchListServiceProvider)
+                        .add(symbols[index].symbol);
+                  }),
             ));
   }
 }

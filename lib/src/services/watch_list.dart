@@ -4,7 +4,7 @@ import '../models/watch_list.dart';
 import '../providers/connection.dart';
 import '../providers/logging.dart';
 
-final _log = logger(currentFile);
+final _log = logger(currentFile).noop();
 
 const _watchListResult = '''
         success
@@ -31,7 +31,7 @@ final _watchListDoc = gql('''
 
 final _addSymbolDoc = gql('''
   mutation AddSymbol(\$symbol: String!) {
-    action: addSymbol(input: {symbol: \$symbol}) {
+    action: addSymbol(symbol: \$symbol) {
         $_watchListResult
     }
   }
