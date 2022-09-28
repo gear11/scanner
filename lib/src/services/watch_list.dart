@@ -65,8 +65,7 @@ final _searchSymbolsDoc = gql('''
 ''');
 
 WatchList _fromItems(List<dynamic> items) {
-  return WatchList(
-      items.map((item) => WatchListItem.fromMap(item)).toList(growable: false));
+  return WatchList(items.map((item) => WatchListItem.fromMap(item)).toList());
 }
 
 class WatchListService {

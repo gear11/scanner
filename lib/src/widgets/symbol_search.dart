@@ -38,11 +38,21 @@ class SymbolSearchDelegate extends SearchDelegate {
   @override
   Widget buildResults(BuildContext context) {
     if (results.length == 1) {
-      _log.warning("Adding watchlist symbol ${results[0]}");
-      ref
-          .read(watchListServiceProvider)
-          .add(results[0].symbol)
-          .then(Navigator.of(context).pop);
+      final symbolInfo = results[0];
+      final watchListService = ref.watch(watchListServiceProvider);
+      if (watchListService.current.has(symbolInfo.symbol)) {
+        Future.delayed(Duration.zero, Navigator.of(context).pop);
+      } else {
+        final action = "Added ${symbolInfo.symbol} to watchlist";
+        _log.info(action);
+        watchListService
+            .add(results[0].symbol)
+            .then(Navigator.of(context).pop)
+            .then((_) {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(action)));
+        });
+      }
       return Container();
     }
     // Otherwise, 0 or multiple results, no change
@@ -92,19 +102,25 @@ class SymbolInfoList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, ref) {
+    final watchListService = ref.watch(watchListServiceProvider);
+    ref.watch(watchListUpdateProvider);
     return ListView.builder(
         itemCount: symbols.length,
         itemBuilder: (context, index) => SymbolListTile(
               symbols[index].symbol,
+              enabled: !watchListService.current.has(symbols[index].symbol),
               subtitle: symbols[index].companyName,
               trailing: IconButton(
                   icon: const Icon(Icons.add),
                   tooltip: 'Add ${symbols[index].symbol}',
                   onPressed: () {
-                    _log.info('Adding ${symbols[index].symbol}');
-                    ref
-                        .read(watchListServiceProvider)
-                        .add(symbols[index].symbol);
+                    //watchListService.current.addEmpty(symbols[index].symbol);
+                    watchListService.add(symbols[index].symbol);
+                    final action =
+                        'Added ${symbols[index].symbol} to watchlist';
+                    _log.info(action);
+                    ScaffoldMessenger.of(context)
+                        .showSnackBar(SnackBar(content: Text(action)));
                   }),
             ));
   }

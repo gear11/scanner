@@ -4,8 +4,10 @@ import '../providers/logging.dart';
 final log = nullLogger(currentFile);
 
 class SymbolListTile extends StatelessWidget {
-  const SymbolListTile(this.symbol, {this.subtitle, this.trailing, super.key});
+  const SymbolListTile(this.symbol,
+      {this.enabled = true, this.subtitle, this.trailing, super.key});
 
+  final bool enabled;
   final String symbol;
   final String? subtitle;
   final Widget? trailing;
@@ -13,19 +15,22 @@ class SymbolListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: ColoredCircleAvatar(symbol),
+      enabled: enabled,
+      leading: ColoredCircleAvatar(symbol, enabled),
       title: Text(symbol),
       subtitle: subtitle != null ? Text(subtitle!) : null,
-      trailing: trailing,
+      trailing: enabled ? trailing : null,
     );
   }
 }
 
 class ColoredCircleAvatar extends StatelessWidget {
-  const ColoredCircleAvatar(this.text, {Key? key, this.fromColors = const []})
+  const ColoredCircleAvatar(this.text, this.enabled,
+      {Key? key, this.fromColors = const []})
       : super(key: key);
 
   final String text;
+  final bool enabled;
   final List<Color> fromColors;
 
   @override
@@ -42,10 +47,19 @@ class ColoredCircleAvatar extends StatelessWidget {
       bg = fromColors[(17 * hashCode) % fromColors.length];
     }
 
+    if (!enabled) {
+      bg = grayscale(bg);
+    }
+
     return CircleAvatar(
       backgroundColor: bg,
       child: Text(text[0]),
     );
+  }
+
+  Color grayscale(Color orig) {
+    final val = (orig.red + orig.blue + orig.green) ~/ 3;
+    return Color.fromRGBO(val, val, val, orig.opacity);
   }
 }
 

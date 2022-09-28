@@ -21,11 +21,22 @@ class WatchListItem with _$WatchListItem {
       item['close'],
       item['wap'],
       item['volume']);
+
+  factory WatchListItem.empty(String symbol) =>
+      WatchListItem(symbol, 0, 0, 0, 0, 0, 0);
 }
 
 class WatchList {
   WatchList(this.items);
   final List<WatchListItem> items;
+
+  bool has(String symbol) {
+    return items.any((item) => (item.symbol == symbol));
+  }
+
+  void addEmpty(String symbol) {
+    items.add(WatchListItem.empty(symbol));
+  }
 }
 
 @freezed

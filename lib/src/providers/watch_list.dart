@@ -20,6 +20,7 @@ class WiredWatchListService {
   final watchlistEvents = StreamController<WatchList>();
   final StreamController<ConnectionEvent> connEvents;
   bool _loopStarted = false;
+  WatchList current = WatchList([]);
 
   Future<void> startRefreshLoop() async {
     if (_loopStarted) {
@@ -76,6 +77,7 @@ class WiredWatchListService {
   }
 
   void _onWatchList(WatchList watchlist, String msg) {
+    current = watchlist;
     watchlistEvents.add(watchlist);
     connEvents.add(ConnectionEvent(msg));
   }
