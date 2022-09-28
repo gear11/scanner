@@ -2,26 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:scanner/src/widgets/symbol_search.dart';
 
-import '../settings/settings_view.dart';
 import '../widgets/watch_list.dart';
 import '../widgets/counter.dart';
 import '../widgets/connection_status.dart';
-import 'add_symbol.dart';
+import '../providers/logging.dart';
+
+final _log = logger(currentFile);
 
 /// Displays a list of SampleItems.
-class WatchListView extends ConsumerStatefulWidget {
+class WatchListView extends ConsumerWidget {
   const WatchListView({super.key});
 
   static const routeName = '/';
 
   @override
-  createState() => _WatchListViewState();
-}
-
-class _WatchListViewState extends ConsumerState<WatchListView> {
-  @override
-  Widget build(BuildContext context) {
-    //ref.watch(symbolSearchResultsProvider(query)
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
         appBar: AppBar(
           actions: [
@@ -31,10 +26,11 @@ class _WatchListViewState extends ConsumerState<WatchListView> {
                   icon: const Icon(Icons.add),
                   tooltip: 'Add symbol',
                   onPressed: () {
-                    showSearch(
+                    final symbol = showSearch(
                       context: context,
-                      delegate: SymbolSearchDelegate(),
+                      delegate: SymbolSearchDelegate(ref),
                     );
+                    _log.info('Adding $symbol');
                   },
                 ))
           ],
@@ -47,14 +43,8 @@ class _WatchListViewState extends ConsumerState<WatchListView> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: const [
                   Expanded(flex: 8, child: WatchList()),
-                  Expanded(flex: 1, child: Counter()),
+                  //Expanded(flex: 1, child: Counter()),
                   Expanded(flex: 1, child: ConnectionStatusWidget()),
                 ])));
-  }
-
-  @override
-  ConsumerState<ConsumerStatefulWidget> createState() {
-    // TODO: implement createState
-    throw UnimplementedError();
   }
 }
